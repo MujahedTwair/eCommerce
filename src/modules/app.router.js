@@ -3,6 +3,8 @@ import categoryRouter from './category/category.router.js';
 import productRouter from './product/product.router.js';
 import authRouter from './auth/auth.router.js';
 import subcategoryRouter from './subcategory/subcategory.router.js';
+import couponRouter from './coupon/coupon.router.js'
+import sendEmail from '../services/email.js';
 
 const initApp = (app, express) => {
     app.use(express.json());
@@ -11,6 +13,7 @@ const initApp = (app, express) => {
     app.use('/product', productRouter);
     app.use('/auth', authRouter);
     app.use('/subcategory', subcategoryRouter);
+    app.use('/coupon', couponRouter);
     app.get('/', (req, res) => res.status(200).json({ message: "welcome" }));
     app.use('*', (req, res) => res.status(500).json({ message: "Page not found" }));
 }

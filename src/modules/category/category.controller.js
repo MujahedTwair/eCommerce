@@ -28,7 +28,8 @@ export const createCategory = async (req, res) => {
     const { secure_url, public_id } = await cloudinary.uploader.upload(req.file.path, {
         folder: `${process.env.APP_Name}/categories`,
     });
-    const newCategory = await categoryModel.create({ name, slug, image: { secure_url, public_id } });
+    const newCategory = await categoryModel.create({ name, slug, image: { secure_url, public_id },
+        createdBy:req.user.id, updatedBy: req.user.id });
     return res.status(201).json({ message: "success", newCategory });
 }
 
@@ -58,7 +59,7 @@ export const updateCategory = async (req, res) => {
             await cloudinary.uploader.destroy(category.image.public_id);
             category.image = { secure_url, public_id };
         }
-
+        category.updatedBy = req.user.id;
         await category.save();
 
         return res.status(201).json({ message: "success", category });

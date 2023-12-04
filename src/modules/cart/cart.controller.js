@@ -26,7 +26,7 @@ export const createCart = async (req, res) => {
 
     await cart.save();
 
-    return res.status(404).json({ message: "success: cart exists(updated)", cart });
+    return res.status(200).json({ message: "success: cart exists(updated)", cart });
 
 }
 
@@ -43,7 +43,7 @@ export const removeItem = async (req, res) => {
     return res.status(200).json({ message: "success", updatedCart });
 }
 
-export const clear = async (req, res) => {
+export const clear = async (req, res, next) => {
     const clearedCart = await cartModel.findOneAndUpdate({ userId: req.user.id }, {
         products: []
     }, { new: true });
@@ -53,6 +53,9 @@ export const clear = async (req, res) => {
 
 export const getCart = async (req, res) => {
     const cart = await cartModel.findOne({ userId: req.user.id });
-
+    if (!cart) {
+        // return res.status(404).json({ message: "cart not found" });
+        return next(new Error("cart not found", { cause: 404 }));
+    }
     return res.status(201).json({ message: "success", cart: cart.products });
 }

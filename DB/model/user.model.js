@@ -18,6 +18,7 @@ const userSchema = new Schema({
     },
     image: {
         type: Object,
+        // required: true
     },
     phone: {
         type: String,
@@ -47,6 +48,9 @@ const userSchema = new Schema({
     sendCode:{
         type: String,
         default: null
+    },
+    changePasswordTime: {
+        type: Date
     }
 }, {
     timestamps: true,

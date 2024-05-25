@@ -8,6 +8,6 @@ export const create = joi.object({
 })
 
 export const get = joi.object({
-    categoryId: generalFields.id
+    id: generalFields.id
 });
 

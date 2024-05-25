@@ -8,7 +8,10 @@ import { asyncHandler } from '../../services/errorHandling.js';
 const router = Router();
 
 
-router.post('/', auth(endPoint.create), asyncHandler(orderController.createOrder));
+router.post('/', auth(endPoint.create), validation(validatores.createOrder), asyncHandler(orderController.createOrder));
+router.get('/', auth(endPoint.get), asyncHandler(orderController.getOrders));
+router.patch('/cancel/:id', auth(endPoint.cancel), validation(validatores.cancelOrder), asyncHandler(orderController.cancelOrder));
+router.patch('/changeStatus/:id', auth(endPoint.changeStatus),validation(validatores.changeStatus), asyncHandler(orderController.changeStatus));
 
 
 

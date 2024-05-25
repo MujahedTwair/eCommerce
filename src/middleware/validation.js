@@ -19,7 +19,7 @@ export const generalFields = {
         fieldname: joi.string().required(),
         dest: joi.string()
     }),
-    id: joi.string().length(24).required()
+    id: joi.string().regex(/^[0-9a-fA-F]{24}$/).message('Invalid id').required()
 }
 
 export const validation = (schema) => {
@@ -30,10 +30,16 @@ export const validation = (schema) => {
             inputsData.file = req.file || req.files;
         }
         const validationResult = schema.validate(inputsData, { abortEarly: false });
+        const errorForUser = validationResult.error?.details.map((ele) => {
+            return {
+                path: ele.path[0],
+                message: ele.message
+            }
+        })
         if (validationResult.error) {
             return res.status(403).json({
                 message: "validation error",
-                validationError: validationResult.error.details
+                validationError: errorForUser
             });
         }
 

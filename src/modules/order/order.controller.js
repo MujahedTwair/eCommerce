@@ -6,10 +6,11 @@ import userModel from "../../../DB/model/user.model.js";
 
 export const createOrder = async (req, res, next) => {
     const { couponName } = req.body;
-
+    const plays = [];
+    
     // check cart
     const cart = await cartModel.findOne({ userId: req.user._id });
-    if (!cart) {
+    if (!cart || cart.products.length == 0 ) {
         return next(new Error('cart is empty', { cause: 400 }));
     }
     req.body.products = cart.products;
@@ -59,7 +60,7 @@ export const createOrder = async (req, res, next) => {
         finalPrice: subTotals - ((subTotals * req.body.coupon?.amount || 0) / 100),
         address: req.body?.address || user.address,
         phoneNumber: req.body?.phone || user.phone,
-        couponName: req.body.couponName ?? ''
+        couponName: req.body.couponName
     })
 
     for (const product of req.body.products) {
@@ -72,4 +73,54 @@ export const createOrder = async (req, res, next) => {
     await cartModel.updateOne({ userId: req.user.id }, { products: [] });
 
     return res.status(201).json({ message: "success", order });
+}
+
+export const getOrders = async (req, res, next) => {
+    const orders = await orderModel.find({ userId: req.user.id });
+    return res.status(200).json({ message: "success", orders });
+}
+
+export const cancelOrder = async (req, res, next) => {
+    const { id } = req.params;
+    const order = await orderModel.findOne({ _id: id, userId: req.user.id });
+    if (!order) {
+        return next(new Error('Invalid order', { cause: 404 }));
+    }
+    if (order.status != 'pending') {
+        return next(new Error("Can't cancel this order", { cause: 403 }));
+    }
+    req.body.status = 'cancelled';
+    req.body.updatedBy = req.user.id;
+
+    const newOrder = await orderModel.findByIdAndUpdate(id, req.body, { new: true });
+    for (const product of order.products) {
+        await productModel.updateOne({ _id: product.productId }, { $inc: { stock: product.quantity } });
+    }
+    if (order.couponName) {
+        await couponModel.updateOne({ name: order.couponName }, { $pull: { usedBy: req.user.id } });
+    }
+    return res.status(200).json({ message: "success", order: newOrder });
+}
+
+export const changeStatus = async (req, res, next) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const order = await orderModel.findById(id);
+    if(!order){
+        return next(new Error("Order not found", { cause: 404 }));
+    }
+    if(order.status == 'cancelled' || order.status == 'deliverd'){
+        return next(new Error("Can't change order status", { cause: 404 }));
+    }
+    if(status == 'cancelled'){
+        for (const product of order.products) {
+            await productModel.updateOne({ _id: product.productId }, { $inc: { stock: product.quantity } });
+        }
+        if (order.couponName) {
+            await couponModel.updateOne({ name: order.couponName }, { $pull: { usedBy: order.userId } });
+        }
+    }
+    const newOrder = await orderModel.findByIdAndUpdate(id, { status }, { new: true });
+
+    return res.status(200).json({ message: "success", order: newOrder });
 }

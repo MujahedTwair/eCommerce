@@ -17,3 +17,4 @@ export const createProduct = joi.object({
     colors: joi.array().items(joi.string().max(10)).max(5),
     sizes: joi.array().items(joi.string().valid('s','m','lg','xlg','xxlg')).max(5)
 })
+
